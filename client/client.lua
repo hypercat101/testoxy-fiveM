@@ -1,5 +1,6 @@
-local running, cooldown = false, false
+local running = false
 local blip, npc, box, dropSpot, dropPed = nil, nil, nil, nil, nil
+local deliveryTimeoutToken = 0
 
 local function loadModel(model)
     local hash = type(model) == 'string' and GetHashKey(model) or model
@@ -30,9 +31,26 @@ local function spawnBlip(coords, label)
     SetBlipRoute(blip, true)
 end
 
-local function pickDelivery()
-    local places = Config.Locations.delivery
-    dropSpot = places[math.random(#places)]
+local function clearDropoffEntities()
+    if blip then
+        RemoveBlip(blip)
+        blip = nil
+    end
+
+    if dropPed and DoesEntityExist(dropPed) then
+        DeleteEntity(dropPed)
+        dropPed = nil
+    end
+end
+
+local function pickDelivery(deliveryData)
+    if not deliveryData or not deliveryData.coords then return end
+
+    dropSpot = {
+        coords = vector3(deliveryData.coords.x, deliveryData.coords.y, deliveryData.coords.z),
+        label = deliveryData.label
+    }
+
     spawnBlip(dropSpot.coords, dropSpot.label)
     dropPed = placePed("a_m_y_business_01", dropSpot.coords)
     exports.ox_target:addLocalEntity(dropPed, {
@@ -49,25 +67,40 @@ local function pickDelivery()
 end
 
 function finishDelivery()
+    if not running then return end
+
     local success = lib.skillCheck({'easy', 'easy', 'medium'}, {'w', 'a', 's', 'd'})
     if success then
-        TriggerServerEvent('oxyrun:addMoney')
+        TriggerServerEvent('oxyrun:completeDelivery')
         lib.notify({ title = 'Delivery', description = Config.Notifications.complete, type = 'success' })
     else
+        TriggerServerEvent('oxyrun:cancelDelivery')
         lib.notify({ title = 'Delivery', description = Config.Notifications.fail, type = 'error' })
     end
+
     running = false
-    if blip then RemoveBlip(blip) blip = nil end
-    if dropPed and DoesEntityExist(dropPed) then DeleteEntity(dropPed) dropPed = nil end
-    cooldown = true
-    SetTimeout(Config.Cooldown * 60000, function() cooldown = false end)
+    clearDropoffEntities()
 end
 
-function startDelivery()
+function startDelivery(deliveryData)
     running = true
     lib.notify({ title = 'Delivery', description = Config.Notifications.start, type = 'info' })
+    lib.notify({ title = 'Delivery', description = Config.Notifications.timeLimit:format(Config.DeliveryTimeLimit), type = 'info' })
+
     if box and DoesEntityExist(box) then DeleteEntity(box) end
-    pickDelivery()
+    pickDelivery(deliveryData)
+
+    deliveryTimeoutToken = deliveryTimeoutToken + 1
+    local currentToken = deliveryTimeoutToken
+
+    SetTimeout(Config.DeliveryTimeLimit * 60000, function()
+        if not running or currentToken ~= deliveryTimeoutToken then return end
+
+        running = false
+        clearDropoffEntities()
+        TriggerServerEvent('oxyrun:cancelDelivery')
+        lib.notify({ title = 'Delivery', description = Config.Notifications.timeExpired, type = 'error' })
+    end)
 end
 
 CreateThread(function()
@@ -84,8 +117,18 @@ CreateThread(function()
             icon = "fa-truck",
             distance = 2.0,
             onSelect = function()
-                if not running and not cooldown then startDelivery() end
+                if running then
+                    lib.notify({ title = 'Delivery', description = 'You already have an active delivery.', type = 'error' })
+                    return
+                end
+
+                TriggerServerEvent('oxyrun:requestStart')
             end
         }
     })
+end)
+
+RegisterNetEvent('oxyrun:startDelivery', function(deliveryData)
+    if running then return end
+    startDelivery(deliveryData)
 end)

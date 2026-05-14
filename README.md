@@ -1,45 +1,123 @@
-# oxyrunjob
+<div align="center">
 
-Drug delivery job for FiveM. Players pick up packages and run them across the map - each drop requires a skill check minigame to get paid.
+# OXY-DELIVERY-FIVEM-RESOURCE
 
-## What it does
 
-- Package pickup at a fixed start location
-- Random delivery points each run
-- Skill check (ox_lib) on delivery - pass to get paid, fail and you walk away empty
-- Cooldown between runs so players can't spam it
-- NPC + blip markers at pickup and dropoff
-- Works on ESX and QBCore
+![last commit](https://img.shields.io/github/last-commit/hypercat101/oxy-delivery-FiveM-Resource?label=last%20commit&color=blue)
+![lua](https://img.shields.io/badge/lua-100.0%25-blue)
+![languages](https://img.shields.io/badge/languages-1-gray)
 
-## Dependencies
+*Built with:*
 
+![Lua](https://img.shields.io/badge/Lua-2C2D72?style=for-the-badge&logo=lua&logoColor=white)
+
+</div>
+
+-----
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Getting Started](#getting-started)
+	- [Prerequisites](#prerequisites)
+	- [Installation](#installation)
+	- [Usage](#usage)
+	- [Testing](#testing)
+- [Configuration](#configuration)
+- [Permissions](#permissions)
+
+-----
+
+## Overview
+
+**OXY-DELIVERY-FIVEM-RESOURCE** is a lightweight FiveM delivery job script where players pick up a package, drive to a server-assigned drop location, complete a skill check, and receive a cash payout.
+
+**Key Features:**
+
+- 📦 Package pickup and randomized delivery routes
+- 🔒 Server-validated payouts with active-run, cooldown, and location checks
+- ⏱️ Delivery time limit and cooldown protection
+- ⚙️ Configurable framework mode, rewards, blips, and notifications
+
+-----
+
+## Getting Started
+
+### Prerequisites
+
+- A FiveM server running **FXServer**
 - [ox_lib](https://github.com/overextended/ox_lib)
 - [ox_target](https://github.com/overextended/ox_target)
-- ESX (`es_extended`) or QBCore (`qb-core`)
+- Either **ESX** (`es_extended`) or **QBCore** (`qb-core`)
 
-## Setup
+### Installation
 
-1. Drop `oxyrunjob` into your `resources` folder
-2. Set `Config.Framework` in `config.lua` to `'esx'` or `'qbcore'`
-3. Tweak pay, cooldown, and drop locations to your liking
-4. Add `ensure oxyrunjob` to `server.cfg`
+1. Download this repository.
+1. Place the folder in your server's `resources` directory.
+1. Add the following to your `server.cfg`:
 
-## Config
+```cfg
+ensure oxy-delivery-FiveM-Resource
+```
 
-| Option | Default | Description |
-|--------|---------|-------------|
-| `Config.Framework` | `'esx'` | `'esx'` or `'qbcore'` |
-| `Config.Cooldown` | `5` | Minutes between runs |
-| `Config.DeliveryTimeLimit` | `5` | Time limit per delivery (minutes) |
-| `Config.Rewards.money` | `2500` | Payout per successful drop |
+### Usage
 
-Locations and notification strings are also in `config.lua`.
+Once installed:
 
-## How It Works
+1. Go to the configured start location.
+1. Interact with the delivery package.
+1. Drive to the assigned drop-off marker.
+1. Interact with the drop NPC and pass the skill check.
+1. Receive your configured payout.
 
-1. Interact with the package at the start marker
-2. A random drop point gets assigned and marked
-3. Drive to the NPC at the drop location and interact
-4. Complete the skill check
-5. Pass → get paid. Fail → nothing
-6. Cooldown kicks in before you can take another run
+### Testing
+
+1. Start your FiveM server with the resource enabled.
+1. Start one delivery and verify route + drop NPC spawn.
+1. Complete the skill check and confirm payout is awarded.
+1. Try starting a new run during cooldown and confirm it is blocked.
+1. Let a run expire and confirm it fails with timeout feedback.
+
+-----
+
+## Configuration
+
+The configuration file is located at `config.lua`.
+
+|Option|Description|Default|
+|---------------------------|------------------------------------------------------------|----------------|
+|`Config.Framework`|Framework integration mode|`esx`|
+|`Config.Debug`|Enable console debug logging|`false`|
+|`Config.Cooldown`|Minutes between completed deliveries|`5`|
+|`Config.DeliveryTimeLimit`|Minutes allowed to complete each delivery|`5`|
+|`Config.Rewards.money`|Cash payout amount|`2500`|
+|`Config.Locations.start`|Start location vector|`vector3(-103.5, 6330.5, 31.5)`|
+|`Config.Locations.delivery`|List of possible drop-off locations|`10 locations`|
+|`Config.Notifications`|Client-facing notification strings|*(see `config.lua`)*|
+|`Config.Blip`|Route blip sprite/color/scale configuration|*(see `config.lua`)*|
+
+-----
+
+## Permissions
+
+No custom ACE permission is required by default.
+
+Access control is handled by your framework/player economy setup (ESX or QBCore), and payout validation is enforced server-side.
+
+-----
+
+## Contributing
+
+Contributions are welcome! Feel free to open an issue or submit a pull request on GitHub.
+
+-----
+
+## License
+
+This project is open source. See the repository for details.
+
+-----
+
+<div align="center">
+	<sub>Made by <a href="https://github.com/hypercat101">hypercat101</a> · Hypers Development</sub>
+</div>
